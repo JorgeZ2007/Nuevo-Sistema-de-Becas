@@ -8,10 +8,16 @@ package sistemadebecas.servicio;
 import sistemadebecas.modelo.Beca;
 import sistemadebecas.modelo.Beneficiario;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Locale;
 
 public class PersistenciaCSV {
-    
+
     private static final String ARCHIVO_DATOS = "datos_becas.csv";
     private static final String SEPARADOR = ";";
 
@@ -21,12 +27,11 @@ public class PersistenciaCSV {
     public void cargarDatosBatch(GestorBecas gestor) {
         File archivo = new File(ARCHIVO_DATOS);
         if (!archivo.exists()) {
-            return; // Si el archivo no existe aún, se iniciará el programa con el gestor vacío.
+            return; // Si el archivo no existe aún, el programa inicia con el gestor vacío.
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
             String linea;
-            Beca becaActual = null;
 
             while ((linea = reader.readLine()) != null) {
                 if (linea.trim().isEmpty()) {
@@ -40,10 +45,11 @@ public class PersistenciaCSV {
                     // Estructura: BECA;id;nombre;monto;cupos
                     String id = campos[1];
                     String nombre = campos[2];
-                    double monto = Double.parseDouble(campos[3]);
-                    int cupos = Integer.parseInt(campos[4]);
+                    // Normaliza coma a punto para evitar NumberFormatException
+                    double monto = Double.parseDouble(campos[3].replace(',', '.'));
+                    int cupos = Integer.parseInt(campos[4].trim());
 
-                    becaActual = new Beca(id, nombre, monto, cupos);
+                    Beca becaActual = new Beca(id, nombre, monto, cupos);
                     gestor.agregarBeca(becaActual);
 
                 } else if (tipoRegistro.equalsIgnoreCase("BENEFICIARIO")) {
@@ -54,20 +60,23 @@ public class PersistenciaCSV {
                     String fechaNac = campos[4];
                     String genero = campos[5];
                     String carrera = campos[6];
-                    double promedio = Double.parseDouble(campos[7]);
-                    int quintil = Integer.parseInt(campos[8]);
+                    // Normaliza coma a punto para evitar NumberFormatException
+                    double promedio = Double.parseDouble(campos[7].replace(',', '.'));
+                    int quintil = Integer.parseInt(campos[8].trim());
 
                     Beneficiario b = new Beneficiario(nombre, rut, fechaNac, genero, carrera, promedio, quintil);
                     
                     try {
                         gestor.agregarBeneficiarioABeca(idBeca, b);
                     } catch (Exception e) {
-                        // Silenciar excepciones al recargar datos válidos desde archivo
+                        // Silencia excepciones si se recargan datos ya existentes
                     }
                 }
             }
         } catch (IOException e) {
             System.err.println("Error al cargar los datos desde el archivo CSV: " + e.getMessage());
+        } catch (NumberFormatException e) {
+            System.err.println("Error en el formato numérico del archivo CSV: " + e.getMessage());
         }
     }
 
@@ -78,8 +87,8 @@ public class PersistenciaCSV {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARCHIVO_DATOS))) {
             
             for (Beca beca : gestor.getMapaBecas().values()) {
-                // Escribir la línea correspondiente a la Beca
-                writer.write(String.format("BECA;%s;%s;%.2f;%d",
+                // Forzar Locale.US garantiza que siempre use punto (.) como separador decimal
+                writer.write(String.format(Locale.US, "BECA;%s;%s;%.2f;%d",
                         beca.getIdBeca(),
                         beca.getNombreBeca(),
                         beca.getMontoMensual(),
@@ -88,7 +97,7 @@ public class PersistenciaCSV {
 
                 // Escribir los beneficiarios anidados en esa Beca
                 for (Beneficiario b : beca.getListaBeneficiarios()) {
-                    writer.write(String.format("BENEFICIARIO;%s;%s;%s;%s;%s;%s;%.2f;%d",
+                    writer.write(String.format(Locale.US, "BENEFICIARIO;%s;%s;%s;%s;%s;%s;%.2f;%d",
                             beca.getIdBeca(),
                             b.getNombre(),
                             b.getRut(),
