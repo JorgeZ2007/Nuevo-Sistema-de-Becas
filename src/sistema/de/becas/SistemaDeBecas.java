@@ -5,18 +5,20 @@
  */
 package sistema.de.becas;
 
-/**
- *
- * @author Alfar
- */
-public class SistemaDeBecas {
+import sistemadebecas.servicio.GestorBecas;
+import sistemadebecas.servicio.PersistenciaCSV;
+import sistemadebecas.vista.MenuConsola;
 
-    /**
-     * @param args the command line arguments
-     */
+public class SistemaDeBecas {
+    
     public static void main(String[] args) {
-        System.out.println("HOLA MUNDO");
-        System.out.println("Probando");
+        // Inicialización de componentes del sistema
+        GestorBecas gestor = new GestorBecas();
+        PersistenciaCSV persistencia = new PersistenciaCSV();
+        
+        // Ejecución de la interfaz de usuario
+        MenuConsola menu = new MenuConsola(gestor, persistencia);
+        menu.iniciar();
     }
     
 }
