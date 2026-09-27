@@ -5,28 +5,32 @@
  */
 package sistemadebecas.modelo;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-public class Beca {
+public abstract class Beca {
     private String idBeca;
     private String nombreBeca;
     private double montoMensual;
     private int cuposMaximos;
-    private List<Beneficiario> listaBeneficiarios; // Colección anidada
+    private List<Beneficiario> listaBeneficiarios;
+    private Requisito requisito;
 
-    public Beca(String idBeca, String nombreBeca, double montoMensual, int cuposMaximos) {
+    public Beca(String idBeca, String nombreBeca, double montoMensual, int cuposMaximos, Requisito requisito) {
         this.idBeca = idBeca;
         this.nombreBeca = nombreBeca;
         this.montoMensual = montoMensual;
         this.cuposMaximos = cuposMaximos;
+        this.requisito = requisito;
         this.listaBeneficiarios = new ArrayList<>();
     }
 
-    // Cumple SIA-3: Buena práctica para NO retornar colecciones por referencia
-    public List<Beneficiario> getListaBeneficiarios() {
-        return Collections.unmodifiableList(listaBeneficiarios);
+    public abstract String getTipoBeca();
+
+    public boolean evaluarPostulante(Beneficiario b) {
+        if (requisito != null) {
+            return requisito.cumpleRequisitos(b);
+        }
+        return true;
     }
 
     public boolean agregarBeneficiario(Beneficiario b) {
@@ -49,17 +53,22 @@ public class Beca {
         return null;
     }
 
-    // Cumple SIA-5: Sobrecarga de métodos 1
     public double calcularPresupuestoAnual() {
-        return (listaBeneficiarios.size() * montoMensual) * 12;
+        return this.montoMensual * 12 * this.listaBeneficiarios.size();
     }
 
     public double calcularPresupuestoAnual(int meses) {
-        return (listaBeneficiarios.size() * montoMensual) * meses;
+        return this.montoMensual * meses * this.listaBeneficiarios.size();
     }
 
+    // Getters y Setters
     public String getIdBeca() { return idBeca; }
     public String getNombreBeca() { return nombreBeca; }
     public double getMontoMensual() { return montoMensual; }
     public int getCuposMaximos() { return cuposMaximos; }
+    public Requisito getRequisito() { return requisito; }
+
+    public List<Beneficiario> getListaBeneficiarios() {
+        return Collections.unmodifiableList(listaBeneficiarios);
+    }
 }
