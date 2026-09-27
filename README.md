@@ -19,6 +19,8 @@ El código fuente está organizado en el paquete principal `sistemadebecas` bajo
 
 ```text
 src/
+└── sistema/
+    ├── SistemaDeBecas.java # Clase en donde se ejecuta el MAIN
 └── sistemadebecas/
     ├── modelo/                 # Clases de Dominio y Jerarquía de Herencia
     │   ├── Persona.java            # Clase base con atributos de identidad
@@ -36,4 +38,4 @@ src/
     ├── vista/                  # Capa de Interfaz de Usuario
     │   ├── MenuConsola.java        # Menú interactivo por consola 
     │   └── VentanaPrincipal.java   # Interfaz gráfica de usuario 
-    └── Main.java               # Punto de entrada principal (Selector de modo)
+
