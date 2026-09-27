@@ -8,17 +8,38 @@ package sistema.de.becas;
 import sistemadebecas.servicio.GestorBecas;
 import sistemadebecas.servicio.PersistenciaCSV;
 import sistemadebecas.vista.MenuConsola;
+import sistemadebecas.vista.VentanaPrincipal;
+
+import javax.swing.*;
 
 public class SistemaDeBecas {
-    
+
     public static void main(String[] args) {
-        // Inicialización de componentes del sistema
         GestorBecas gestor = new GestorBecas();
         PersistenciaCSV persistencia = new PersistenciaCSV();
-        
-        // Ejecución de la interfaz de usuario
-        MenuConsola menu = new MenuConsola(gestor, persistencia);
-        menu.iniciar();
+
+        String[] opciones = {"Ventana Gráfica (GUI)", "Consola de Comandos"};
+        int seleccion = JOptionPane.showOptionDialog(
+                null,
+                "¿Cómo desea ejecutar el Sistema de Gestión de Becas?",
+                "Modo de Ejecución",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                opciones,
+                opciones[0]
+        );
+
+        if (seleccion == 0) {
+            // Ejecutar Modo Ventana Swing
+            SwingUtilities.invokeLater(() -> {
+                VentanaPrincipal ventana = new VentanaPrincipal(gestor, persistencia);
+                ventana.setVisible(true);
+            });
+        } else if (seleccion == 1) {
+            // Ejecutar Modo Consola
+            MenuConsola menu = new MenuConsola(gestor, persistencia);
+            menu.iniciar();
+        }
     }
-    
 }
