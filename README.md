@@ -20,7 +20,7 @@ El código fuente está organizado en el paquete principal `sistemadebecas` bajo
 ```text
 src/
 └── sistema/
-    ├── SistemaDeBecas.java # Clase en donde se ejecuta el MAIN
+│   ├── SistemaDeBecas.java # Clase en donde se ejecuta el MAIN
 └── sistemadebecas/
     ├── modelo/                 # Clases de Dominio y Jerarquía de Herencia
     │   ├── Persona.java            # Clase base con atributos de identidad
