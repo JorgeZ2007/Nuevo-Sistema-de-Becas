@@ -6,38 +6,41 @@
 package sistemadebecas.modelo;
 
 import java.util.*;
+import java.time.LocalDate;
 
 public abstract class Beca {
     private String idBeca;
     private String nombreBeca;
+    private String descripcionBeca;
     private double montoMensual;
-    private int cuposMaximos;
     private List<Beneficiario> listaBeneficiarios;
-    private Requisito requisito;
+    private String estado ;
+    private LocalDate inicioPost ;
+    private LocalDate cierrePost ;
+    private LocalDate cierreRev ;
 
-    public Beca(String idBeca, String nombreBeca, double montoMensual, int cuposMaximos, Requisito requisito) {
+    public Beca(String idBeca, String nombreBeca, String desc, double montoMensual, LocalDate inicio,
+                LocalDate cierre, LocalDate rev) {
         this.idBeca = idBeca;
         this.nombreBeca = nombreBeca;
+        this.descripcionBeca=desc;
         this.montoMensual = montoMensual;
-        this.cuposMaximos = cuposMaximos;
-        this.requisito = requisito;
         this.listaBeneficiarios = new ArrayList<>();
+        estado="Revision" ;
+        inicioPost=inicio ;
+        cierrePost=cierre ;
+        cierreRev=rev ;
     }
 
     public abstract String getTipoBeca();
+    // Metodo abstracto para evaluar si un postulante cumple con los
+    // requisitos de la beca.
+    public abstract boolean evaluarPostulante(Beneficiario b) ;
 
-    public boolean evaluarPostulante(Beneficiario b) {
-        if (requisito != null) {
-            return requisito.cumpleRequisitos(b);
-        }
-        return true;
-    }
-
+    // Agrega al beneficiario en la lista de postulados de una beca especifica
     public boolean agregarBeneficiario(Beneficiario b) {
-        if (listaBeneficiarios.size() < cuposMaximos) {
-            return listaBeneficiarios.add(b);
-        }
-        return false;
+        return listaBeneficiarios.add(b);
+        return true;
     }
 
     public boolean eliminarBeneficiario(String rut) {
@@ -64,11 +67,26 @@ public abstract class Beca {
     // Getters y Setters
     public String getIdBeca() { return idBeca; }
     public String getNombreBeca() { return nombreBeca; }
+    public String getDescripcionBeca() { return descripcionBeca; }
     public double getMontoMensual() { return montoMensual; }
-    public int getCuposMaximos() { return cuposMaximos; }
-    public Requisito getRequisito() { return requisito; }
 
     public List<Beneficiario> getListaBeneficiarios() {
         return Collections.unmodifiableList(listaBeneficiarios);
+    }
+
+
+    // Metodo para verificar si la beca esta abierta a postulaciones, en revisión de
+    // las postulaciones ya realizadas o cerrada.
+    public void cambioEstado() {
+        if ( ( (LocalDate.now()).isAfter(inicioPost) || LocalDate.now().isEqual(inicioPost) ) && LocalDate.now().isBefore(cierrePost)) {
+            estado="Abierto" ;
+        }
+        else if ( (LocalDate.now()).isAfter(cierrePost) && LocalDate.now().isBefore(cierreRev)) {
+            estado="Revision" ;
+
+        }
+        else {
+            estado="Cerrado" ;
+        }
     }
 }

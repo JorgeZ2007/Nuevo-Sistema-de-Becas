@@ -9,6 +9,8 @@ public class Beneficiario extends Persona {
     private String carrera;
     private double promedioNotas;
     private int quintilSocioeconomico;
+    private int puntajePaes ;
+    private boolean viviendaValparaiso ;
 
     public Beneficiario(String nombre, String rut, String fechaNacimiento, String genero, 
                         String carrera, double promedioNotas, int quintilSocioeconomico) {
@@ -29,4 +31,6 @@ public class Beneficiario extends Persona {
     public String getCarrera() { return carrera; }
     public double getPromedioNotas() { return promedioNotas; }
     public int getQuintilSocioeconomico() { return quintilSocioeconomico; }
+    public int getPuntajePaes() { return puntajePaes; }
+    public boolean getViviendaValparaiso() { return viviendaValparaiso; }
 }
