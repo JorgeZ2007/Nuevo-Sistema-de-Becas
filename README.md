@@ -9,7 +9,13 @@
 
 El **Sistema de Gestión de Becas** es una solución de software orientada a objetos en Java diseñada para administrar becas académicas y socioeconómicas, automatizar la evaluación de postulantes y optimizar la asignación presupuestaria.
 
-El sistema cuenta con un **doble modo de ejecución** (Por consola y por ventana) y permite la persistencia de datos mediante archivos estructurados CSV.
+El sistema cuenta con un **doble modo de ejecución** (Por consola y por ventana) y permite la persistencia de datos mediante archivos estructurados CSV ().
+
+---
+
+## Como ejecutar el codigo
+
+Para ejecutar el programa, se debe extraer el archivo .zip, abrir la carpeta con el proyecto en NetBeans y oprimir el boton Run :)
 
 ---
 
