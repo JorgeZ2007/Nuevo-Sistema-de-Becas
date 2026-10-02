@@ -20,6 +20,14 @@ public class Beneficiario extends Persona {
         this.quintilSocioeconomico = quintilSocioeconomico;
     }
 
+    public Beneficiario(String nombre, String rut, String fechaNacimiento, String genero,
+                        String carrera, double promedioNotas, float quintilSocioeconomico) {
+        super(nombre, rut, fechaNacimiento, genero);
+        this.carrera = carrera;
+        this.promedioNotas = promedioNotas;
+        this.quintilSocioeconomico = (int) quintilSocioeconomico;
+    }
+
     @Override
     public String obtenerDetalleFormateado() {
         return super.obtenerDetalleFormateado() + 
@@ -33,4 +41,6 @@ public class Beneficiario extends Persona {
     public int getQuintilSocioeconomico() { return quintilSocioeconomico; }
     public int getPuntajePaes() { return puntajePaes; }
     public boolean getViviendaValparaiso() { return viviendaValparaiso; }
+
+    
 }

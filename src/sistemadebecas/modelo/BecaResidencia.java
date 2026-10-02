@@ -25,4 +25,7 @@ public class BecaResidencia extends Beca {
         return false ;
     }
 
+
+    public double getPromedioMin() {return promedioMin ;} ;
+    public boolean getViviendaValparaiso() {return ViviendaValparaiso ;}
 }

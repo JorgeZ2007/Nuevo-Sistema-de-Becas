@@ -25,4 +25,7 @@ public class BecaEstudio extends Beca {
         return false ;
     }
 
+    public double getPromedioMin() {return promedioMin ;} ;
+    public int getQuintil() {return quintilRequerido ;}
+
 }

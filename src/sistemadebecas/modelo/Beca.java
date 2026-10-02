@@ -69,6 +69,7 @@ public abstract class Beca {
     public String getNombreBeca() { return nombreBeca; }
     public String getDescripcionBeca() { return descripcionBeca; }
     public double getMontoMensual() { return montoMensual; }
+    public String getEstado() { return estado ; }
 
     public List<Beneficiario> getListaBeneficiarios() {
         return Collections.unmodifiableList(listaBeneficiarios);

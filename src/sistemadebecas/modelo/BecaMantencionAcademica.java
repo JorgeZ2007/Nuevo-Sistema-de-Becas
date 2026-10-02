@@ -25,5 +25,7 @@ public class BecaMantencionAcademica extends Beca {
         return false ;
     }
 
+    public int getPuntajePaes() {return puntajePaes ;} ;
+    public boolean getViviendaValparaiso() {return viviendaValparaiso ;}
 
 }

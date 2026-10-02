@@ -17,6 +17,9 @@ public class BecaAlimentacion extends Beca {
         quintil=q ;
     }
 
+    // Sobreescritura metodo de Beca evaluarPostulante.
+    // Permite verificar si un postulante cumple con lo necesario para
+    // Obtener a la beca postulada.
     @Override
     public boolean evaluarPostulante(Beneficiario b) {
         if (b.getViviendaValparaiso()==viviendaValparaiso && b.getQuintilSocioeconomico()<=quintil) {
@@ -24,5 +27,8 @@ public class BecaAlimentacion extends Beca {
         }
         return false ;
     }
+
+    public boolean getViviendaValparaiso() {return viviendaValparaiso ;} ;
+    public int getQuintil() {return quintil ;}
 
 }
