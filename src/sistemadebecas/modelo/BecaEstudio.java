@@ -17,6 +17,9 @@ public class BecaEstudio extends Beca {
         quintilRequerido=quintil ;
     }
 
+    // Sobreescritura metodo de Beca evaluarPostulante.
+    // Para obtener la beca el Beneficiario debe cumplir con el promedio mínimo
+    // y el quintil requerido
     @Override
     public boolean evaluarPostulante(Beneficiario b) {
         if (b.getPromedioNotas()>=promedioMin && b.getQuintilSocioeconomico()<=quintilRequerido) {

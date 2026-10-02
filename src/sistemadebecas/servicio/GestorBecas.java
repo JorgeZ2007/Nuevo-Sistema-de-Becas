@@ -13,88 +13,94 @@ import sistemadebecas.excepciones.RequisitoNoCumplidoException;
 import java.util.*;
 
 public class GestorBecas {
-    private Map<String, Beca> mapaBecas; 
+    private HashMap<Beneficiario, ArrayList<Postulacion>> mapaPostulaciones ;
 
     public GestorBecas() {
-        this.mapaBecas = new HashMap<>();
+        this.mapaPostulaciones = new HashMap<>();
     }
-
-
-    public boolean agregarBeca(Beca beca) {
-        if (mapaBecas.containsKey(beca.getIdBeca())) {
-            return false;
+    
+    // Método para agregar una nueva postulacion a la lista de postulaciones
+    // del Beneficiario
+    private void agregarPostulacion(Beneficiario b, Postulacion p) {
+        ArrayList<Postulacion> postulaciones=mapaPostulaciones.get(b) ;
+        if (!postulaciones.contains(p)) {
+            postulaciones.add(p) ;
+            return ;
         }
-        mapaBecas.put(beca.getIdBeca(), beca);
-        return true;
     }
 
-    public Beca buscarBeca(String idBeca) throws BecaNoEncontradaException {
-        Beca b = mapaBecas.get(idBeca);
-        if (b == null) {
-            throw new BecaNoEncontradaException(idBeca);
+    // Agregamos un Beneficiario al mapa y creamos su ArrayList
+    // para almacenar sus postulaciones
+    public boolean agregarBeneficiario(Beneficiario b, Postulacion p) {
+        if (mapaPostulaciones.containsKey(b)) {
+            agregarPostulacion(b, p) ;
+            return false ;
         }
-        return b;
+        ArrayList<Postulacion> postulaciones=new ArrayList<>() ;
+        postulaciones.add(p) ;
+        mapaPostulaciones.put(b, postulaciones) ;
+        return true ;
     }
-
-    public boolean eliminarBeca(String idBeca) throws BecaNoEncontradaException {
-        buscarBeca(idBeca); 
-        mapaBecas.remove(idBeca);
-        return true;
-    }
-
-    // Evita retornar el HashMap por referencia
-    public Map<String, Beca> getMapaBecas() {
-        return Collections.unmodifiableMap(mapaBecas);
-    }
-
-
-    public boolean agregarBeneficiarioABeca(String idBeca, Beneficiario beneficiario) 
-            throws BecaNoEncontradaException, RequisitoNoCumplidoException {
-        Beca beca = buscarBeca(idBeca);
-        
-        if (beneficiario.getPromedioNotas() < 4.0) {
-            throw new RequisitoNoCumplidoException("El postulante no cumple con el promedio mínimo requerido (4.0).");
+    
+    // Mostrar las postulaciones de un beneficiario especifico y el
+    // estado en el que se encuentra la postulacion
+    public void mostrarPostulaciones(Beneficiario b) {
+        if (b==null || !mapaPostulaciones.containsKey(b)) {
+            System.out.println("Beneficiario no encontrado, intente nuevamente.") ;
+            return ;
         }
         
-        boolean agregado = beca.agregarBeneficiario(beneficiario);
-        if (!agregado) {
-            throw new RequisitoNoCumplidoException("La beca '" + beca.getNombreBeca() + "' no tiene cupos disponibles.");
+        ArrayList<Postulacion> postulaciones=mapaPostulaciones.get(b) ;
+        
+        System.out.println("Postulaciones del Beneficiario " + b.getRut() + ".") ;
+        for (int i=0; i<postulaciones.size() ; i++) {
+            Postulacion p=postulaciones.get(i) ;
+            System.out.println(i + ". Postulacion a Beca: "+ p.getBecaSolicitada()) ;
+            System.out.println("Estado: " + p.getEstado()) ;
         }
-        return true;
     }
-
-    public boolean eliminarBeneficiarioDeBeca(String idBeca, String rut) throws BecaNoEncontradaException {
-        Beca beca = buscarBeca(idBeca);
-        return beca.eliminarBeneficiario(rut);
+    
+    // Eliminar una postulacion especifica de un beneficiario
+    public boolean eliminarPostulacion(Beneficiario b, Postulacion p) {
+        if (!mapaPostulaciones.containsKey(b)) {
+            return false ;
+        }
+        ArrayList<Postulacion> postulaciones=mapaPostulaciones.get(b) ;
+        postulaciones.remove(p) ;
+        return true ;
     }
-
-    public List<Beneficiario> obtenerBeneficiarios(String idBeca) throws BecaNoEncontradaException {
-        Beca beca = buscarBeca(idBeca);
-        return beca.getListaBeneficiarios();
-    }
-
-    public List<Beneficiario> obtenerBeneficiarios(String idBeca, int quintilMaximo) throws BecaNoEncontradaException {
-        Beca beca = buscarBeca(idBeca);
-        List<Beneficiario> filtrados = new ArrayList<>();
-        for (Beneficiario b : beca.getListaBeneficiarios()) {
-            if (b.getQuintilSocioeconomico() <= quintilMaximo) {
-                filtrados.add(b);
+    
+    // Busqueda de una postulacion especifica de un Beneficiario
+    public boolean buscarPostulacion(Beneficiario b, Postulacion p) {
+        if (!mapaPostulaciones.containsKey(b)) {
+            return false ;
+        }
+        ArrayList<Postulacion> postulaciones=mapaPostulaciones.get(b) ;
+        for (int i=0; i<postulaciones.size(); i++) {
+            if ( (postulaciones.get(i)).equals(p) ) {
+                return true ;
             }
         }
-        return Collections.unmodifiableList(filtrados);
+        return false ;
+    }
+    
+    // Buscar Beneficiario a partir de un rut
+    public Beneficiario buscarBeneficiario(String rut) {
+        for (Beneficiario b : mapaPostulaciones.keySet()) {
+        if (b.getRut().equalsIgnoreCase(rut)) {
+            return b ;
+        }
+    }
+    return null ;
     }
 
-    
-    
-    public List<Beneficiario> obtenerPostulantesPrioritarios(String idBeca) throws BecaNoEncontradaException {
-        Beca beca = buscarBeca(idBeca);
-        List<Beneficiario> prioritarios = new ArrayList<>();
-        
-        for (Beneficiario b : beca.getListaBeneficiarios()) {
-            if (b.getQuintilSocioeconomico() <= 2 && b.getPromedioNotas() >= 5.5) {
-                prioritarios.add(b);
-            }
+
+    public Postulacion obtenerPostulacion(int indice, Beneficiario b) {
+        if (!mapaPostulaciones.containsKey(b)) {
+        return null;
         }
-        return Collections.unmodifiableList(prioritarios);
+    
+        ArrayList<Postulacion> lista = mapaPostulaciones.get(b);
+        return lista.get(indice - 1);
     }
 }

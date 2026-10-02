@@ -32,7 +32,6 @@ public abstract class Beca {
         cierreRev=rev ;
     }
 
-    public abstract String getTipoBeca();
     // Metodo abstracto para evaluar si un postulante cumple con los
     // requisitos de la beca.
     public abstract boolean evaluarPostulante(Beneficiario b) ;

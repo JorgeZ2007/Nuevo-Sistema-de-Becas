@@ -1,33 +1,23 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package sistemadebecas.vista;
 
-import sistemadebecas.servicio.GestorBecas;
-import sistemadebecas.servicio.PersistenciaCSV;
-import sistemadebecas.modelo.Beca;
-import sistemadebecas.modelo.BecaAcademica;
-import sistemadebecas.modelo.BecaSocioeconomica;
-import sistemadebecas.modelo.Beneficiario;
-import sistemadebecas.excepciones.BecaNoEncontradaException;
-import sistemadebecas.excepciones.RequisitoNoCumplidoException;
-
-import java.util.*; 
 
 public class MenuConsola {
     private GestorBecas gestor;
     private PersistenciaCSV persistencia;
     private Scanner scanner;
+    private CargarDatosBecas cargadorBecas;
+    
+    
 
-    public MenuConsola(GestorBecas gestor, PersistenciaCSV persistencia) {
+    public MenuConsola(GestorBecas gestor, PersistenciaCSV persistencia, CargarDatosBecas cargar) {
         this.gestor = gestor;
         this.persistencia = persistencia;
         this.scanner = new Scanner(System.in);
+        cargadorBecas=cargar ;
     }
 
     public void iniciar() {
+        // Carga los datos de las becas postulables
+        HashMap<String, Beca> mapaBecas = cargadorBecas.leerArchivo("archivo.csv");
         // Carga Batch al iniciar el programa
         persistencia.cargarDatosBatch(gestor);
 
@@ -45,13 +35,13 @@ public class MenuConsola {
 
     private void mostrarMenuPrincipal() {
         System.out.println("\n========== SISTEMA DE GESTIÓN DE BECAS (SIA) ==========");
-        System.out.println("1. Registrar nueva Beca (Académica / Socioeconómica)");
-        System.out.println("2. Listar todas las Becas");
-        System.out.println("3. Buscar / Eliminar Beca");
-        System.out.println("4. Registrar y Evaluar Postulante / Beneficiario");
-        System.out.println("5. Listar Beneficiarios de una Beca (Con Filtro Opcional)");
-        System.out.println("6. Buscar / Eliminar Beneficiario de Beca");
-        System.out.println("7. Ver Reporte de Postulantes Prioritarios");
+        System.out.println("1. Listar todas las Becas");
+        System.out.println("2. Registrar Beneficiario y postulación a una beca");
+        System.out.println("3. Listar postulaciones de un Beneficiario");
+        System.out.println("4. Eliminar postulacion de un Beneficiario");
+        System.out.println("5. Generar reporte");
+        System.out.println("6. Buscar postulacion");
+        System.out.println("7. algo");
         System.out.println("0. Salir y Guardar Cambios");
         System.out.println("=========================================================");
     }
@@ -60,25 +50,25 @@ public class MenuConsola {
         try {
             switch (opcion) {
                 case 1:
-                    registrarBeca();
-                    break;
-                case 2:
                     listarBecas();
                     break;
+                case 2:
+                    registrarBeneficiario() ;
+                    break;
                 case 3:
-                    buscarOEliminarBeca();
+                    listarBeneficiarioPost();
                     break;
                 case 4:
-                    registrarBeneficiario();
+                    eliminarPostulacionBeneficiario();
                     break;
                 case 5:
-                    listarBeneficiarios();
+                    generarReporte() ;
                     break;
                 case 6:
-                    buscarOEliminarBeneficiario();
+                    buscarPostulacion() ;
                     break;
                 case 7:
-                    mostrarPrioritarios();
+                    //algo
                     break;
                 case 0:
                     System.out.println("Cerrando sesión y procesando persistencia de datos...");
@@ -93,176 +83,172 @@ public class MenuConsola {
         }
     }
 
-    private void registrarBeca() {
-        System.out.println("\n--- REGISTRO DE BECA ---");
-        System.out.println("1. Beca Académica");
-        System.out.println("2. Beca Socioeconómica");
-        int tipo = leerEnteroRango("Seleccione el tipo de beca: ", 1, 2);
-
-        System.out.print("ID de Beca: ");
-        String id = scanner.nextLine().trim();
-        System.out.print("Nombre de Beca: ");
-        String nombre = scanner.nextLine().trim();
-        
-        double monto = leerDoublePositivo("Monto mensual ($): ");
-        int cupos = leerEnteroPositivo("Cupos máximos: ");
-
-        Beca nuevaBeca = null;
-
-        if (tipo == 1) {
-            double promedioMin = leerDoublePositivo("Promedio de notas mínimo exigido: ");
-            nuevaBeca = new BecaAcademica(id, nombre, monto, cupos, promedioMin);
-        } else if (tipo == 2) {
-            int quintilMax = leerEnteroRango("Quintil socioeconómico máximo permitido (1-5): ", 1, 5);
-            nuevaBeca = new BecaSocioeconomica(id, nombre, monto, cupos, quintilMax);
-        }
-
-        if (gestor.agregarBeca(nuevaBeca)) {
-            System.out.println("Beca registrada con éxito en el sistema.");
-        } else {
-            System.out.println("Error: Ya existe una beca registrada con el ID '" + id + "'.");
-        }
-    }
-
+    // Muestra las becas postulables disponibles junto a su descripción
     private void listarBecas() {
-        System.out.println("\n--- LISTADO DE BECAS REGISTRADAS ---");
-        if (gestor.getMapaBecas().isEmpty()) {
-            System.out.println("No hay becas registradas en el sistema.");
-            return;
-        }
-
-        for (Beca b : gestor.getMapaBecas().values()) {
-            System.out.printf("[%s] %s | Monto: $%.2f | Cupos: %d/%d | Presupuesto Anual: $%.2f%n",
-                    b.getIdBeca(), b.getNombreBeca(), b.getMontoMensual(),
-                    b.getListaBeneficiarios().size(), b.getCuposMaximos(),
-                    b.calcularPresupuestoAnual());
+        System.out.println("Becas postulables: ") ;
+        for (Beca beca : cargadorBecas.mapaBecas.values()) {
+            System.out.print(beca.getIdBeca() + ". ") ;
+            System.out.println(beca.getNombreBeca()) ;
+            System.out.println("Descripción: " + beca.getdescripcionBeca()) ;
         }
     }
-
-    private void buscarOEliminarBeca() throws BecaNoEncontradaException {
-        System.out.println("\n--- BUSCAR / ELIMINAR BECA ---");
-        System.out.print("Ingrese ID de la Beca: ");
-        String id = scanner.nextLine().trim();
-
-        Beca b = gestor.buscarBeca(id);
-        System.out.println("\nBeca encontrada:");
-        System.out.println("ID: " + b.getIdBeca());
-        System.out.println("Nombre: " + b.getNombreBeca());
-        System.out.println("Monto Mensual: $" + b.getMontoMensual());
-        System.out.println("Cupos ocupados: " + b.getListaBeneficiarios().size() + "/" + b.getCuposMaximos());
-
-        System.out.print("\n¿Desea eliminar esta beca? (s/n): ");
-        String resp = scanner.nextLine().trim();
-        if (resp.equalsIgnoreCase("s")) {
-            gestor.eliminarBeca(id);
-            System.out.println("Beca eliminada correctamente.");
-        }
-    }
-
-    private void registrarBeneficiario() throws BecaNoEncontradaException, RequisitoNoCumplidoException {
-        System.out.println("\n--- REGISTRO Y POSTULACIÓN DE BENEFICIARIO ---");
-        System.out.print("ID de la Beca a la cual postula: ");
-        String idBeca = scanner.nextLine().trim();
-
-        System.out.print("RUT: ");
-        String rut = scanner.nextLine().trim();
-        System.out.print("Nombre completo: ");
-        String nombre = scanner.nextLine().trim();
-        System.out.print("Fecha de Nacimiento (DD/MM/AAAA): ");
-        String fechaNac = scanner.nextLine().trim();
-        System.out.print("Género: ");
-        String genero = scanner.nextLine().trim();
-        System.out.print("Carrera: ");
-        String carrera = scanner.nextLine().trim();
-        
-        double promedio = leerDoublePositivo("Promedio de notas (ej. 5.5): ");
-        int quintil = leerEnteroRango("Quintil socioeconómico (1-5): ", 1, 5);
-
-        Beneficiario b = new Beneficiario(nombre, rut, fechaNac, genero, carrera, promedio, quintil);
-
-        if (gestor.agregarBeneficiarioABeca(idBeca, b)) {
-            System.out.println("Beneficiario evaluado y asignado correctamente a la beca.");
-        }
-    }
-
-    private void listarBeneficiarios() throws BecaNoEncontradaException {
-        System.out.println("\n--- LISTAR BENEFICIARIOS DE UNA BECA ---");
-        System.out.print("ID de Beca: ");
-        String idBeca = scanner.nextLine().trim();
-
-        System.out.print("¿Desea filtrar por quintil máximo? (Ingrese quintil 1-5 o presione ENTER para ver todos): ");
-        String filtroInput = scanner.nextLine().trim();
-
-        List<Beneficiario> lista;
-        if (filtroInput.isEmpty()) {
-            lista = gestor.obtenerBeneficiarios(idBeca);
-        } else {
-            try {
-                int quintilMax = Integer.parseInt(filtroInput);
-                if (quintilMax < 1 || quintilMax > 5) {
-                    System.out.println("Quintil fuera de rango. Mostrando todos los beneficiarios...");
-                    lista = gestor.obtenerBeneficiarios(idBeca);
-                } else {
-                    lista = gestor.obtenerBeneficiarios(idBeca, quintilMax);
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Entrada de quintil inválida. Mostrando todos los beneficiarios...");
-                lista = gestor.obtenerBeneficiarios(idBeca);
+    
+    // postulacion  a una beca a partir de un Beneficiario
+    private void postularBeca(Beneficiario b) {
+        listarBecas() ;
+        String opcion ;
+        do {
+            System.out.println("Ingrese número de beca a la que desea postular: ") ;
+            opcion=scanner.nextLine() ;
+            opcion= "0" + opcion ;
+            
+            if (!cargadorBecas.mapaBecas.containsKey(opcion)) {
+                System.out.println("Beca ingresada incorrectamente, intente nuevamente.") ;
             }
+            
+            
+        } while ( !cargadorBecas.mapaBecas.containsKey(opcion) ) ;
+        
+        Beca beca=cargadorBecas.mapaBecas.get(opcion) ;
+        beca.cambioEstado() ;
+        String estado=beca.getEstado() ;
+        if (estado.equals("Cerrado")) {
+            System.out.println("La beca ya no se encuentra abierta a postulaciones.") ;
+            return ;
         }
-
-        if (lista.isEmpty()) {
-            System.out.println("No se encontraron beneficiarios asignados bajo los criterios especificados.");
-            return;
-        }
-
-        System.out.println("\nBeneficiarios asignados:");
-        for (Beneficiario b : lista) {
-            System.out.println("- " + b.obtenerDetalleFormateado());
-        }
+        
+        Postulacion post=new Postulacion(b, beca) ;
+        gestor.agregarBeneficiario(b, post) ;
+            
+        System.out.println("Beca postulada exitosamente.") ;
+        
     }
 
-    private void buscarOEliminarBeneficiario() throws BecaNoEncontradaException {
-        System.out.println("\n--- BUSCAR / ELIMINAR BENEFICIARIO ---");
-        System.out.print("ID de Beca: ");
-        String idBeca = scanner.nextLine().trim();
-        System.out.print("RUT del Beneficiario: ");
-        String rut = scanner.nextLine().trim();
-
-        Beca beca = gestor.buscarBeca(idBeca);
-        Beneficiario b = beca.buscarBeneficiario(rut);
-
-        if (b == null) {
-            System.out.println("Beneficiario no encontrado en la beca indicada.");
-            return;
+    // Registro de un Beneficiario nuevo o de una nueva postulación
+    // para uno ya existente
+    private void registrarBeneficiario() {
+        System.out.println("Ingrese su rut: ") ;
+        String rut=scanner.nextLine() ;
+        
+        Beneficiario b=gestor.buscarBeneficiario(rut) ;
+        if (b!=null) {
+            postularBeca(b) ;
+            return ;
         }
-
-        System.out.println("Encontrado: " + b.obtenerDetalleFormateado());
-        System.out.print("¿Desea eliminar a este beneficiario de la beca? (s/n): ");
-        String resp = scanner.nextLine().trim();
-        if (resp.equalsIgnoreCase("s")) {
-            gestor.eliminarBeneficiarioDeBeca(idBeca, rut);
-            System.out.println("Beneficiario eliminado con éxito.");
+        
+        System.out.println("Ingrese su nombre: ") ;
+        String nombre=scanner.nextLine() ;
+        
+        System.out.println("Ingrese quintil socioeconómico: ") ;
+        int quintil=Integer.parseInt(scanner.nextLine()) ;
+        
+        System.out.println("¿Su vivienda se encuentra en la región de Valparaíso? SI/NO: ") ;
+        String respuestaVivienda=scanner.nextLine() ;
+        boolean vivienda ;
+        if (respuestaVivienda.equalsIgnoreCase("si")) {
+            vivienda=true ;
         }
+        else { vivienda=false ; }
+        
+        System.out.println("Ingrese su promedio académico actual: ") ;
+        double promedio=Double.parseDouble(scanner.nextLine()) ;
+        
+        System.out.println("Ingrese su puntaje paes: ") ;
+        int puntajePaes=Integer.parseInt(scanner.nextLine()) ;
+        
+        Beneficiario b=new Beneficiario(nombre, rut, promedio, quintil, puntajePaes, vivienda) ;
+        postularBeca(b) ;
     }
 
-    private void mostrarPrioritarios() throws BecaNoEncontradaException {
-        System.out.println("\n--- REPORTES: POSTULANTES PRIORITARIOS ---");
-        System.out.print("ID de Beca: ");
-        String idBeca = scanner.nextLine().trim();
-
-        List<Beneficiario> prioritarios = gestor.obtenerPostulantesPrioritarios(idBeca);
-
-        if (prioritarios.isEmpty()) {
-            System.out.println("No hay beneficiarios prioritarios asignados.");
-            return;
-        }
-
-        System.out.println("Beneficiarios con prioridad de asignación:");
-        for (Beneficiario b : prioritarios) {
-            System.out.println("* " + b.obtenerDetalleFormateado());
-        }
+    // Muestra las postulaciones de un Beneficiario
+    private void listarBeneficiarioPost() {
+        Beneficiario b=buscarUnBeneficiario() ;
+            
+        gestor.mostrarPostulaciones(b) ;
+        
     }
+
+    // Elimina una postulacion de un beneficiario especifico
+    private void eliminarPostulacionBeneficiario() {
+        Beneficiario b=buscarUnBeneficiario() ;
+        
+        gestor.mostrarPostulaciones(b) ;
+        int opcion ;
+        Postulacion p ;
+        do {
+            System.out.println("Ingrese número de la postulación que desea eliminar: ") ;
+            opcion=Integer.parseInt(scanner.nextLine()) ;
+            p=gestor.obtenerPostulacion(opcion, b) ;
+            
+            if (p==null) {
+                System.out.println("Postulación ingresada incorrectamente, intente nuevamente.") ;
+            }
+            
+        } while (p==null) ;
+        gestor.eliminarPostulacion(b, p) ;
+        System.out.println("Postulación eliminada correctamente.") ;
+    }
+    
+    
+    public void generarReporte() {
+        Beneficiario b=buscarUnBeneficiario() ;
+        
+        gestor.mostrarPostulaciones(b) ;
+        int opcion ;
+        Postulacion p ;
+        do {
+            System.out.println("Ingrese número de la postulación a la cual desea generar el reporte: ") ;
+            opcion=Integer.parseInt(scanner.nextLine()) ;
+            p=gestor.obtenerPostulacion(opcion, b) ;
+            
+            if (p==null) System.out.println("Postulación ingresada incorrectamente, intente nuevamente.") ;
+            
+        } while (p==null) ;
+        
+        p.generarReporte() ;
+        
+    }
+    
+    
+    public void buscarPostulacion(){
+        Beneficiario b=buscarUnBeneficiario() ;
+        
+        gestor.mostrarPostulaciones(b) ;
+        int opcion ;
+        Postulacion p ;
+        do {
+            System.out.println("Ingrese número de la postulación que desea buscar: ") ;
+            opcion=Integer.parseInt(scanner.nextLine()) ;
+            p=gestor.obtenerPostulacion(opcion, b) ;
+            
+            if (p==null) {
+                System.out.println("Postulación ingresada incorrectamente, intente nuevamente.") ;
+            }
+        } while (p==null) ;
+        
+        if (!gestor.buscarPostulacion(b, p)) {
+            System.out.println("Usted no ha postulado a esta beca.") ;
+            return ;
+        }
+        System.out.println("Usted tiene una postulación realizada a la beca "+ p.getBecaSolicitada()) ;
+        
+    }
+    
+    public Beneficiario buscarUnBeneficiario() {
+        Beneficiario b ;
+        do {
+            System.out.println("Ingrese su rut: ") ;
+            String rut=scanner.nextLine() ;
+        
+            b=gestor.buscarBeneficiario(rut) ;
+            if (b==null) {
+                System.out.println("Beneficiario no encontrado, intente nuevamente.") ;
+            }
+        } while (b==null) ;
+        
+        return b ;
+    }
+
 
     // --- MÉTODOS DE LECTURA Y VALIDACIÓN ---
 

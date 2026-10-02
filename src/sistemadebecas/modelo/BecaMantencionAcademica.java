@@ -17,9 +17,12 @@ public class BecaMantencionAcademica extends Beca {
         viviendaValparaiso=vivienda ;
     }
 
+    // Sobreescritura metodo de Beca evaluarPostulante.
+    // Para obtener la beca el Beneficiario debe cumplir con el puntaje Paes requerido
+    // y no vivir en la región de Valparaíso
     @Override
     public boolean evaluarPostulante(Beneficiario b) {
-        if (b.getPuntajePaes()>=puntajePaes && b.getViviendaValparaiso()==viviendaValparaiso) {
+        if (b.getPuntajePaes()>=puntajePaes && b.getViviendaValparaiso()!=viviendaValparaiso) {
             return true ;
         }
         return false ;

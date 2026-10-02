@@ -17,9 +17,12 @@ public class BecaResidencia extends Beca {
         viviendaValparaiso=vivienda ;
     }
 
+    // Sobreescritura metodo de Beca evaluarPostulante.
+    // Para obtener la beca el Beneficiario debe cumplir con el promedio mínimo
+    // y no vivir en la región de Valparaíso
     @Override
     public boolean evaluarPostulante(Beneficiario b) {
-        if (b.getPromedioNotas()>=promedioMin && b.getViviendaValparaiso()==viviendaValparaiso) {
+        if (b.getPromedioNotas()>=promedioMin && b.getViviendaValparaiso()!=viviendaValparaiso) {
             return true ;
         }
         return false ;

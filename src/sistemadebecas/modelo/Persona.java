@@ -3,17 +3,13 @@ package sistemadebecas.modelo;
 public class Persona {
     protected String nombre;
     protected String rut;
-    protected String fechaNacimiento;
-    protected String genero;
 
     public Persona() {
     }
 
-    public Persona(String nombre, String rut, String fechaNacimiento, String genero) {
+    public Persona(String nombre, String rut) {
         this.nombre = nombre;
         this.rut = rut;
-        this.fechaNacimiento = fechaNacimiento;
-        this.genero = genero;
     }
 
     public String obtenerDetalleFormateado() {
@@ -22,6 +18,4 @@ public class Persona {
 
     public String getNombre() { return nombre; }
     public String getRut() { return rut; }
-    public String getFechaNacimiento() { return fechaNacimiento; }
-    public String getGenero() { return genero; }
 }

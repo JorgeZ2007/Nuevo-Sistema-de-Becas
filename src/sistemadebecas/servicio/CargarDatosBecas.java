@@ -1,5 +1,4 @@
 
-
 package sistemadebecas.servicio;
 
 // Clase para gestionar de forma individual los datos de las becas
