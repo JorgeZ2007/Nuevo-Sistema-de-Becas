@@ -5,6 +5,7 @@
  */
 
 package sistemadebecas.modelo;
+import java.time.LocalDate;
 
 public class BecaMantencionAcademica extends Beca {
     private int puntajePaes ;

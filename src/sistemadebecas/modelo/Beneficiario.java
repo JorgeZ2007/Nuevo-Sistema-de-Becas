@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package sistemadebecas.modelo;
+import java.util.Objects;
 
 public class Beneficiario extends Persona {
     private double promedioNotas;
@@ -32,8 +33,7 @@ public class Beneficiario extends Persona {
 
     @Override
     public String obtenerDetalleFormateado() {
-        return super.obtenerDetalleFormateado() + 
-               " | Carrera: " + carrera + 
+        return super.obtenerDetalleFormateado() +  
                " | Promedio: " + promedioNotas + 
                " | Quintil: " + quintilSocioeconomico;
     }
@@ -55,12 +55,12 @@ public class Beneficiario extends Persona {
             return false ;
         }
         Beneficiario otro=(Beneficiario) obj ;
-        return Objects.equals(this.rut, otro.rut) ;
+        return Objects.equals(this.getRut(), otro.getRut()) ;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(rut);
+        return Objects.hash(getRut());
     }
 
     

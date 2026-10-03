@@ -2,6 +2,7 @@
 
 package sistemadebecas.modelo;
 import java.time.LocalDate;
+import java.util.Objects;
 
 // Clase postulacion para gestionar las postulaciones de los beneficiarios a
 // becas especificas.
@@ -30,7 +31,7 @@ public class Postulacion {
     // beneficiario. Muestra si la beca ha sido aceptada, rechazada o si aun esta en proceso
     // de revision.
     public void generarReporte() {
-        becaSolicitada.cambioEstado()) ;
+        becaSolicitada.cambioEstado() ;
         System.out.println("Reporte: "+ becaSolicitada) ;
         String estado=becaSolicitada.getEstado() ;
         if (estado.equals("Revision")) { // Si la beca aun esta en periodo de revision:
@@ -40,12 +41,13 @@ public class Postulacion {
             return ;
         }
         else if (becaSolicitada.evaluarPostulante(postulado)) {
-            System.out.println("Usted se ha vuelto beneficiario de la " + becaSolicitada.getNombre() +".") ;
+            System.out.println("Usted se ha vuelto beneficiario de la " + becaSolicitada.getNombreBeca() +".") ;
             estado="ACEPTADO" ;
+            becaSolicitada.agregarBeneficiario(postulado);
             return ;
         }
         else {
-            System.out.println("Usted no ha sido aceptado como beneficiario de la " + becaSolicitada.getNombre() +".") ;
+            System.out.println("Usted no ha sido aceptado como beneficiario de la " + becaSolicitada.getNombreBeca() +".") ;
             estado="RECHAZADO" ;
             //razones rechazo
             return ;
@@ -62,13 +64,14 @@ public class Postulacion {
         if (obj == null || getClass() != obj.getClass()) {
             return false ;
         }
-        Postulacion otro=(Postulacion) obj ;
-        return Objects.equals(this.idPostulacion, otro.idPostulacion) ;
+        Postulacion otro = (Postulacion) obj;
+        return Objects.equals(this.postulado, otro.postulado)
+        && Objects.equals(this.becaSolicitada, otro.becaSolicitada);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idPostulacion) ;
+         return Objects.hash(postulado, becaSolicitada);
     }
     
 

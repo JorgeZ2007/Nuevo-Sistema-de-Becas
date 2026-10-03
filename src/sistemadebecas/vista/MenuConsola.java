@@ -1,4 +1,15 @@
+package sistemadebecas.vista;
 
+import sistemadebecas.excepciones.BecaNoEncontradaException;
+import sistemadebecas.excepciones.RequisitoNoCumplidoException;
+import sistemadebecas.modelo.Beca;
+import sistemadebecas.modelo.Beneficiario;
+import sistemadebecas.modelo.Postulacion;
+import sistemadebecas.servicio.CargarDatosBecas;
+import sistemadebecas.servicio.GestorBecas;
+import sistemadebecas.servicio.PersistenciaCSV;
+import java.util.HashMap;
+import java.util.Scanner;
 
 public class MenuConsola {
     private GestorBecas gestor;
@@ -19,7 +30,7 @@ public class MenuConsola {
         // Carga los datos de las becas postulables
         HashMap<String, Beca> mapaBecas = cargadorBecas.leerArchivo("archivo.csv");
         // Carga Batch al iniciar el programa
-        persistencia.cargarDatosBatch(gestor);
+        persistencia.cargarDatosBatch(gestor,cargadorBecas);
 
         int opcion = -1;
         do {
@@ -76,9 +87,7 @@ public class MenuConsola {
                 default:
                     System.out.println("Opción inválida. Intente nuevamente.");
             }
-        } catch (BecaNoEncontradaException | RequisitoNoCumplidoException e) {
-            System.out.println("Error de negocio: " + e.getMessage());
-        } catch (Exception e) {
+        }  catch (Exception e) {
             System.out.println("Ocurrió un error inesperado: " + e.getMessage());
         }
     }
@@ -86,30 +95,27 @@ public class MenuConsola {
     // Muestra las becas postulables disponibles junto a su descripción
     private void listarBecas() {
         System.out.println("Becas postulables: ") ;
-        for (Beca beca : cargadorBecas.mapaBecas.values()) {
+        for (Beca beca : cargadorBecas.getMapaBecas().values()) {
             System.out.print(beca.getIdBeca() + ". ") ;
             System.out.println(beca.getNombreBeca()) ;
-            System.out.println("Descripción: " + beca.getdescripcionBeca()) ;
+            System.out.println("Descripción: " + beca.getDescripcionBeca()) ;
         }
     }
     
     // postulacion  a una beca a partir de un Beneficiario
     private void postularBeca(Beneficiario b) {
         listarBecas() ;
-        String opcion ;
+        Beca beca=null ;
         do {
             System.out.println("Ingrese número de beca a la que desea postular: ") ;
-            opcion=scanner.nextLine() ;
-            opcion= "0" + opcion ;
-            
-            if (!cargadorBecas.mapaBecas.containsKey(opcion)) {
+            String opcion="0" + scanner.nextLine() ;
+            try {
+                beca=cargadorBecas.buscarBeca(opcion) ;
+            } catch (BecaNoEncontradaException e) {
+                System.out.println(e.getMessage()) ;
                 System.out.println("Beca ingresada incorrectamente, intente nuevamente.") ;
             }
-            
-            
-        } while ( !cargadorBecas.mapaBecas.containsKey(opcion) ) ;
-        
-        Beca beca=cargadorBecas.mapaBecas.get(opcion) ;
+        } while (beca==null) ;
         beca.cambioEstado() ;
         String estado=beca.getEstado() ;
         if (estado.equals("Cerrado")) {
@@ -156,8 +162,8 @@ public class MenuConsola {
         System.out.println("Ingrese su puntaje paes: ") ;
         int puntajePaes=Integer.parseInt(scanner.nextLine()) ;
         
-        Beneficiario b=new Beneficiario(nombre, rut, promedio, quintil, puntajePaes, vivienda) ;
-        postularBeca(b) ;
+        Beneficiario nuevo=new Beneficiario(nombre, rut, promedio, quintil, puntajePaes, vivienda) ;
+        postularBeca(nuevo) ;
     }
 
     // Muestra las postulaciones de un Beneficiario

@@ -9,6 +9,7 @@ import sistemadebecas.modelo.Beca;
 import sistemadebecas.modelo.Beneficiario;
 import sistemadebecas.excepciones.BecaNoEncontradaException;
 import sistemadebecas.excepciones.RequisitoNoCumplidoException;
+import sistemadebecas.modelo.Postulacion;
 
 import java.util.*;
 
@@ -27,6 +28,10 @@ public class GestorBecas {
             postulaciones.add(p) ;
             return ;
         }
+    }
+    
+    public Map<Beneficiario, ArrayList<Postulacion>> getMapaPostulaciones() {
+        return Collections.unmodifiableMap(mapaPostulaciones);
     }
 
     // Agregamos un Beneficiario al mapa y creamos su ArrayList
@@ -101,6 +106,9 @@ public class GestorBecas {
         }
     
         ArrayList<Postulacion> lista = mapaPostulaciones.get(b);
+        if (indice < 1 || indice > lista.size()) {
+            return null;   // así los bucles "while (p==null)" del menú funcionan
+        }
         return lista.get(indice - 1);
     }
 }

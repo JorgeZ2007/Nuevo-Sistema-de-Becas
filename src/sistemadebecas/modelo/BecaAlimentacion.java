@@ -5,6 +5,7 @@
  */
 
 package sistemadebecas.modelo;
+import java.time.LocalDate;
 
 public class BecaAlimentacion extends Beca {
     private boolean viviendaValparaiso ;

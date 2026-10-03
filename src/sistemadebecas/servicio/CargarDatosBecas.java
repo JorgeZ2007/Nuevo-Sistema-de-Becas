@@ -5,6 +5,8 @@ import java.io.*;
 import java.util.*;
 import sistemadebecas.modelo.*;
 import sistemadebecas.excepciones.BecaNoEncontradaException;
+import java.time.LocalDate;
+
 
 // Clase para gestionar de forma individual los datos de las becas
 // extendidas de la clase Beca obteniendolas a partir de un archivo.

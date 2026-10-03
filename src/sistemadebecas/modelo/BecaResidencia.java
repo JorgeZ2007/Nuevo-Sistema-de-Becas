@@ -5,6 +5,7 @@
  */
 
 package sistemadebecas.modelo;
+import java.time.LocalDate;
 
 public class BecaResidencia extends Beca {
     private double promedioMin ;
@@ -30,5 +31,5 @@ public class BecaResidencia extends Beca {
 
 
     public double getPromedioMin() {return promedioMin ;} ;
-    public boolean getViviendaValparaiso() {return ViviendaValparaiso ;}
+    public boolean getViviendaValparaiso() {return viviendaValparaiso ;}
 }

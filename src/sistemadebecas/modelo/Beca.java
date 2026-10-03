@@ -39,7 +39,6 @@ public abstract class Beca {
     // Agrega al beneficiario en la lista de postulados de una beca especifica
     public boolean agregarBeneficiario(Beneficiario b) {
         return listaBeneficiarios.add(b);
-        return true;
     }
 
     public boolean eliminarBeneficiario(String rut) {
@@ -54,14 +53,12 @@ public abstract class Beca {
         }
         return null;
     }
-
-    public double calcularPresupuestoAnual() {
-        return this.montoMensual * 12 * this.listaBeneficiarios.size();
+    public void mostrarBeneficiarios(){
+        for (int i=0; i>listaBeneficiarios.size(); i++){
+            System.out.println(listaBeneficiarios.get(i));
+        }
     }
 
-    public double calcularPresupuestoAnual(int meses) {
-        return this.montoMensual * meses * this.listaBeneficiarios.size();
-    }
 
     // Getters y Setters
     public String getIdBeca() { return idBeca; }
@@ -69,6 +66,7 @@ public abstract class Beca {
     public String getDescripcionBeca() { return descripcionBeca; }
     public double getMontoMensual() { return montoMensual; }
     public String getEstado() { return estado ; }
+    public LocalDate getCierreRev() { return cierreRev; }
 
     public List<Beneficiario> getListaBeneficiarios() {
         return Collections.unmodifiableList(listaBeneficiarios);

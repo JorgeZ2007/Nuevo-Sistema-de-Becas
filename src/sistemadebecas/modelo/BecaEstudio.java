@@ -5,6 +5,7 @@
  */
 
 package sistemadebecas.modelo;
+import java.time.LocalDate;
 
 public class BecaEstudio extends Beca {
     private double promedioMin ;

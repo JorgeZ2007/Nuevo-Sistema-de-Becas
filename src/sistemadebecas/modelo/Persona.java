@@ -1,8 +1,8 @@
 package sistemadebecas.modelo;
 
 public class Persona {
-    protected String nombre;
-    protected String rut;
+    private String nombre;
+    private String rut;
 
     public Persona() {
     }
@@ -13,9 +13,12 @@ public class Persona {
     }
 
     public String obtenerDetalleFormateado() {
-        return "RUT: " + rut + " | Nombre: " + nombre + " | F.Nac: " + fechaNacimiento + " | Género: " + genero;
+        return "RUT: " + rut + " | Nombre: " + nombre ;
     }
 
-    public String getNombre() { return nombre; }
-    public String getRut() { return rut; }
-}
+    public String getNombre () { 
+        return nombre; 
+    }
+    public String getRut () {
+        return rut; }
+    }
