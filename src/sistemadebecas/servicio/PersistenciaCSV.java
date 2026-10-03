@@ -5,118 +5,148 @@
  */
 package sistemadebecas.servicio;
 
+import sistemadebecas.excepciones.BecaNoEncontradaException;
 import sistemadebecas.modelo.Beca;
-import sistemadebecas.modelo.BecaAcademica;
-import sistemadebecas.modelo.BecaSocioeconomica;
 import sistemadebecas.modelo.Beneficiario;
+import sistemadebecas.modelo.Postulacion;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
+/**
+ * Persistencia batch en archivo CSV: se carga al iniciar la aplicación y se guarda al salir.
+ *
+ * Las becas NO se guardan aquí, porque se leen siempre desde "archivo.csv" (CargarDatosBecas).
+ * Este archivo guarda solo lo que cambia durante la ejecución: los beneficiarios y sus postulaciones.
+ *
+ * Formato (separador ';', una línea por registro):
+ *   BENEFICIARIO;rut;nombre;promedio;quintil;puntajePaes;viviendaValparaiso
+ *   POSTULACION;rut;idBeca
+ */
 public class PersistenciaCSV {
 
     private static final String ARCHIVO_DATOS = "datos_becas.csv";
     private static final String SEPARADOR = ";";
 
     /**
-     * Carga masiva de datos (Batch Load) al iniciar la aplicación.
+     * Carga los beneficiarios y sus postulaciones desde el archivo.
+     * Las becas ya deben estar cargadas en el CargarDatosBecas recibido.
      */
-    public void cargarDatosBatch(GestorBecas gestor) {
+    public void cargarDatosBatch(GestorBecas gestor, CargarDatosBecas cargador) {
         File archivo = new File(ARCHIVO_DATOS);
         if (!archivo.exists()) {
-            return; // Si el archivo no existe aún, se inicia vacio.
+            return; // primera ejecución: no hay datos que cargar
         }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(archivo))) {
-            String linea;
+        // Los beneficiarios se leen primero a un mapa auxiliar (por rut) para poder
+        // enlazarlos con las líneas POSTULACION, que pueden venir en cualquier orden.
+        Map<String, Beneficiario> beneficiarios = new HashMap<>();
+        ArrayList<String[]> lineasPostulacion = new ArrayList<>();
 
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(archivo), StandardCharsets.UTF_8))) {
+
+            String linea;
+            int numeroLinea = 0;
             while ((linea = reader.readLine()) != null) {
+                numeroLinea++;
                 if (linea.trim().isEmpty()) {
                     continue;
                 }
-
-                String[] campos = linea.split(SEPARADOR);
-                String tipoRegistro = campos[0];
-
-                if (tipoRegistro.equalsIgnoreCase("BECA")) {
-                    // Estructura compatible: BECA;id;nombre;monto;cupos;[tipoBeca]
-                    String id = campos[1];
-                    String nombre = campos[2];
-                    double monto = Double.parseDouble(campos[3].replace(',', '.'));
-                    int cupos = Integer.parseInt(campos[4].trim());
-
-                    String tipoBeca = (campos.length > 5) ? campos[5].trim() : "ACADEMICA";
-
-                    Beca becaActual;
-                    if (tipoBeca.equalsIgnoreCase("SOCIOECONOMICA")) {
-                        // Beca Socioeconómica por defecto (quintil max 2)
-                        becaActual = new BecaSocioeconomica(id, nombre, monto, cupos, 2);
-                    } else {
-                        // Beca Académica por defecto (promedio min 5.0)
-                        becaActual = new BecaAcademica(id, nombre, monto, cupos, 5.0);
+                String[] campos = linea.split(SEPARADOR, -1);
+                try {
+                    if (campos[0].equals("BENEFICIARIO")) {
+                        Beneficiario b = leerBeneficiario(campos);
+                        beneficiarios.put(b.getRut(), b);
+                    } else if (campos[0].equals("POSTULACION")) {
+                        lineasPostulacion.add(campos);
                     }
-
-                    gestor.agregarBeca(becaActual);
-
-                } else if (tipoRegistro.equalsIgnoreCase("BENEFICIARIO")) {
-                    // Estructura: BENEFICIARIO;idBeca;nombre;rut;fechaNac;genero;carrera;promedio;quintil
-                    String idBeca = campos[1];
-                    String nombre = campos[2];
-                    String rut = campos[3];
-                    String fechaNac = campos[4];
-                    String genero = campos[5];
-                    String carrera = campos[6];
-                    double promedio = Double.parseDouble(campos[7].replace(',', '.'));
-                    int quintil = Integer.parseInt(campos[8].trim());
-
-                    Beneficiario b = new Beneficiario(nombre, rut, fechaNac, genero, carrera, promedio, quintil);
-
-                    try {
-                        gestor.agregarBeneficiarioABeca(idBeca, b);
-                    } catch (Exception e) {
-                        // Silencia excepciones de registros duplicados al recargar
-                    }
+                    // Cualquier otro tipo de línea se ignora (por ejemplo, de un formato antiguo)
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    System.err.println("Línea " + numeroLinea + " ignorada (formato inválido): " + linea);
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error al cargar los datos desde el archivo CSV: " + e.getMessage());
-        } catch (NumberFormatException e) {
-            System.err.println("Error en el formato numérico del archivo CSV: " + e.getMessage());
+            System.err.println("Error al leer '" + ARCHIVO_DATOS + "': " + e.getMessage());
+            return;
+        }
+
+        // Se reconstruyen las postulaciones
+        for (String[] campos : lineasPostulacion) {
+            try {
+                Beneficiario b = beneficiarios.get(campos[1]);
+                if (b == null) {
+                    System.err.println("Postulación ignorada: no existe el beneficiario " + campos[1]);
+                    continue;
+                }
+                Beca beca = cargador.buscarBeca(campos[2]);
+                gestor.agregarBeneficiario(b, new Postulacion(b, beca));
+            } catch (BecaNoEncontradaException e) {
+                // La beca ya no está en archivo.csv: se omite esa postulación
+                System.err.println("Postulación ignorada. " + e.getMessage());
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println("Postulación ignorada (formato inválido).");
+            }
         }
     }
 
-    /**
-     * Guardado masivo de datos (Batch Save) al cerrar la aplicación.
-     */
+    /** Guarda todos los beneficiarios y sus postulaciones, sobrescribiendo el archivo. */
     public void guardarDatosBatch(GestorBecas gestor) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(ARCHIVO_DATOS))) {
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(ARCHIVO_DATOS), StandardCharsets.UTF_8))) {
 
-            for (Beca beca : gestor.getMapaBecas().values()) {
-                String tipoStr = (beca instanceof BecaSocioeconomica) ? "SOCIOECONOMICA" : "ACADEMICA";
+            for (Map.Entry<Beneficiario, ArrayList<Postulacion>> entrada
+                    : gestor.getMapaPostulaciones().entrySet()) {
 
-                writer.write(String.format(Locale.US, "BECA;%s;%s;%.2f;%d;%s",
-                        beca.getIdBeca(),
-                        beca.getNombreBeca(),
-                        beca.getMontoMensual(),
-                        beca.getCuposMaximos(),
-                        tipoStr));
+                Beneficiario b = entrada.getKey();
+                ArrayList<Postulacion> postulaciones = entrada.getValue();
+                if (postulaciones.isEmpty()) {
+                    continue; // sin postulaciones no hay nada que conservar
+                }
+
+                writer.write(String.join(SEPARADOR,
+                        "BENEFICIARIO",
+                        b.getRut(),
+                        b.getNombre().replace(SEPARADOR, ","), // el nombre no puede traer el separador
+                        String.format(Locale.US, "%.2f", b.getPromedioNotas()),
+                        String.valueOf(b.getQuintilSocioeconomico()),
+                        String.valueOf(b.getPuntajePaes()),
+                        String.valueOf(b.getViviendaValparaiso())));
                 writer.newLine();
 
-                for (Beneficiario b : beca.getListaBeneficiarios()) {
-                    writer.write(String.format(Locale.US, "BENEFICIARIO;%s;%s;%s;%s;%s;%s;%.2f;%d",
-                            beca.getIdBeca(),
-                            b.getNombre(),
+                for (Postulacion p : postulaciones) {
+                    writer.write(String.join(SEPARADOR,
+                            "POSTULACION",
                             b.getRut(),
-                            b.getFechaNacimiento(),
-                            b.getGenero(),
-                            b.getCarrera(),
-                            b.getPromedioNotas(),
-                            b.getQuintilSocioeconomico()));
+                            p.getBecaSolicitada().getIdBeca()));
                     writer.newLine();
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error al guardar los datos en el archivo CSV: " + e.getMessage());
+            System.err.println("Error al guardar '" + ARCHIVO_DATOS + "': " + e.getMessage());
         }
+    }
+
+    // Convierte una línea BENEFICIARIO en un objeto. Puede lanzar NumberFormatException
+    // o ArrayIndexOutOfBoundsException, que se tratan en el try-catch de quien la llama.
+    private Beneficiario leerBeneficiario(String[] c) {
+        String rut = c[1].trim();
+        String nombre = c[2].trim();
+        double promedio = Double.parseDouble(c[3].trim().replace(',', '.'));
+        int quintil = Integer.parseInt(c[4].trim());
+        int puntajePaes = Integer.parseInt(c[5].trim());
+        boolean vivienda = Boolean.parseBoolean(c[6].trim());
+        return new Beneficiario(nombre, rut, promedio, quintil, puntajePaes, vivienda);
     }
 }
