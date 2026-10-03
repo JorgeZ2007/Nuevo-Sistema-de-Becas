@@ -16,6 +16,6 @@ El sistema cuenta con un **doble modo de ejecución** (Por consola y por ventana
 
 ## Como ejecutar el codigo
 
-Para ejecutar el programa, se debe tener instalado la aplicacion Netbeans con la version de Java 8 (JDK 1.8), despues se debe extraer el archivo .zip, abrir la carpeta con el proyecto en NetBeans y oprimir el boton Run :)
+Para ejecutar el programa, se debe tener instalado la aplicacion Netbeans con la version de Java 8 (JDK 1.8), despues se debe extraer el archivo .zip, abrir la carpeta con el proyecto en NetBeans y en la clase SistemaDeBecas.java se le hace clic derecho y se seleciona la opcion run file
 
 ---
